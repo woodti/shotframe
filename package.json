@@ -1,0 +1,30 @@
+{
+  "name": "shotframe",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Beautify screenshots with device frames, backgrounds, captions and 3D tilt — 100% in the browser",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/woodti/shotframe"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5"
+  }
+}
