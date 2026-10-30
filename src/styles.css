@@ -201,7 +201,7 @@ kbd {
 
 .frames {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
   margin-bottom: 8px;
 }
@@ -508,4 +508,41 @@ kbd {
 
 .group > .segment {
   margin-bottom: 4px;
+}
+
+.presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.preset {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  color: #3f3f46;
+}
+
+.preset img,
+.preset .ph {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #f4f4f6;
+}
+
+.preset:hover img {
+  border-color: var(--accent);
+}
+
+.custom .segment {
+  flex: 1;
 }

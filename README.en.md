@@ -15,10 +15,11 @@ Wrap screenshots in phone, tablet, laptop and browser frames, add backgrounds, c
 
 ## Features
 
-- **7 frames**: none (adjustable corner radius), browser window (editable URL), macOS window, phone, tablet, laptop, monitor — light/dark themes, 4 device colors, portrait/landscape
-- **Backgrounds**: 10 gradients, solid colors, custom colors and angle, blurred screenshot, transparent
-- **Captions**: title + subtitle above or below the screenshot, text color picked automatically from the background — great for App Store screenshots and social posts
-- **Multiple screenshots**: up to 4 side by side in one image
+- **One-click styles**: 12 presets (mesh glow, paper, blueprint, magazine, isometric stage…) with live thumbnails of your own screenshot
+- **9 frames**: none (adjustable corner radius), browser, macOS window, Windows window, phone (dynamic island), Android (punch-hole), tablet, laptop, monitor — light/dark themes, 4 device colors, portrait/landscape
+- **Backgrounds**: 6 multi-color mesh gradients, 10 gradients, solid colors, blurred screenshot, transparent; optional dots / grid / lines / waves pattern and film grain
+- **Captions**: badge + title + subtitle; wrap words in `**double asterisks**` to highlight them (block or color); sans / serif / kai fonts; above or below the screenshot — great for App Store screenshots and social posts
+- **Multiple screenshots**: up to 4, side by side, staggered or fanned out
 - **3D tilt**: turn left, turn right, lean back (true perspective), plus an isometric view with device thickness
 - **Export**: download PNG or copy to clipboard, at the screenshot's original resolution by default
 - Drag & drop, paste (Ctrl/⌘ + V) or multi-select upload; settings are remembered

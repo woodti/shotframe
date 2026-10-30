@@ -8,6 +8,7 @@ import {
   ImagePlus,
   Laptop,
   Monitor,
+  PanelTop,
   Plus,
   Smartphone,
   Square,
@@ -17,14 +18,19 @@ import {
 import {
   DEVICE_COLORS,
   DEVICE_FRAMES,
+  MESHES,
+  WINDOW_FRAMES,
   autoScale,
   layout,
   makeDemo,
   maxScale,
   render,
+  type Arrange,
+  type CapFont,
   type ColorKey,
   type FrameId,
   type Options,
+  type Pattern,
   type Ratio,
   type Source,
   type Tilt,
@@ -34,7 +40,9 @@ const FRAMES: { id: FrameId; name: string; icon: ReactNode }[] = [
   { id: 'none', name: '无边框', icon: <Square size={18} /> },
   { id: 'browser', name: '浏览器', icon: <Globe size={18} /> },
   { id: 'mac', name: 'Mac 窗口', icon: <AppWindow size={18} /> },
+  { id: 'win', name: 'Windows', icon: <PanelTop size={18} /> },
   { id: 'phone', name: '手机', icon: <Smartphone size={18} /> },
+  { id: 'android', name: '安卓', icon: <Smartphone size={18} /> },
   { id: 'tablet', name: '平板', icon: <Tablet size={18} /> },
   { id: 'laptop', name: '笔记本', icon: <Laptop size={18} /> },
   { id: 'monitor', name: '显示器', icon: <Monitor size={18} /> },
@@ -69,6 +77,23 @@ const TILTS: [Tilt, string][] = [
   ['back', '后仰'],
   ['iso', '等距'],
 ]
+const PATTERNS: [Pattern, string][] = [
+  ['none', '无'],
+  ['dots', '圆点'],
+  ['grid', '网格'],
+  ['lines', '斜线'],
+  ['waves', '波浪'],
+]
+const ARRANGES: [Arrange, string][] = [
+  ['row', '并排'],
+  ['stagger', '错落'],
+  ['fan', '扇形'],
+]
+const CAP_FONTS: [CapFont, string][] = [
+  ['sans', '黑体'],
+  ['serif', '宋体'],
+  ['kai', '楷体'],
+]
 const SHADOWS = ['无', '柔和', '中等', '强烈']
 const SCALES = ['auto', '1', '2', '3', '4'] as const
 type ScaleChoice = (typeof SCALES)[number]
@@ -84,21 +109,60 @@ const DEFAULTS: Options = {
   url: 'example.com',
   title: '我的应用',
   radius: 12,
-  bgKind: 'gradient',
+  bgKind: 'mesh',
   gradient: GRADIENTS[2].colors,
   angle: 135,
+  mesh: 0,
   solid: '#f2f2f7',
+  pattern: 'none',
+  grain: true,
   padding: 12,
   shadow: 2,
   ratio: 'auto',
+  arrange: 'row',
   tilt: 'none',
   tiltAngle: 25,
   capTitle: '',
   capSub: '',
+  capBadge: '',
   capPos: 'top',
   capColor: 'auto',
   capSize: 100,
+  capFont: 'sans',
+  capHl: 'block',
+  capAccent: '#facc15',
 }
+
+/** Style keys a preset owns; anything it leaves out falls back to these. Frame, screenshots and caption text are kept. */
+const STYLE_BASE: Partial<Options> = {
+  pattern: 'none',
+  grain: false,
+  tilt: 'none',
+  tiltAngle: 25,
+  shadow: 2,
+  padding: 12,
+  capFont: 'sans',
+  capHl: 'block',
+  capAccent: '#facc15',
+  capColor: 'auto',
+}
+
+const PRESETS: { name: string; opts: Partial<Options> }[] = [
+  { name: '晚霞', opts: { bgKind: 'mesh', mesh: 0, grain: true } },
+  { name: '极光', opts: { bgKind: 'mesh', mesh: 3, grain: true, tilt: 'right', shadow: 3, capAccent: '#22d3ee' } },
+  { name: '奶油纸感', opts: { bgKind: 'mesh', mesh: 1, grain: true, capFont: 'serif', shadow: 1 } },
+  { name: '点阵海洋', opts: { bgKind: 'gradient', gradient: ['#4facfe', '#00f2fe'], angle: 135, pattern: 'dots' } },
+  { name: '蓝图', opts: { bgKind: 'solid', solid: '#1e3a8a', pattern: 'grid', capAccent: '#60a5fa' } },
+  { name: '落日斜放', opts: { bgKind: 'gradient', gradient: ['#fa709a', '#fee140'], angle: 135, tilt: 'left' } },
+  { name: '等距展台', opts: { bgKind: 'mesh', mesh: 2, tilt: 'iso', grain: true, padding: 10 } },
+  { name: '杂志', opts: { bgKind: 'solid', solid: '#111111', capFont: 'serif', capAccent: '#facc15', shadow: 3 } },
+  { name: '毛玻璃', opts: { bgKind: 'blur', shadow: 3, padding: 14 } },
+  { name: '糖果波浪', opts: { bgKind: 'gradient', gradient: ['#a18cd1', '#fbc2eb'], angle: 135, pattern: 'waves' } },
+  { name: '莓果后仰', opts: { bgKind: 'mesh', mesh: 4, grain: true, tilt: 'back', shadow: 3, capAccent: '#f472b6' } },
+  { name: '极简白', opts: { bgKind: 'solid', solid: '#ffffff', shadow: 1, padding: 10, capHl: 'color', capAccent: '#6366f1' } },
+]
+
+const applyPreset = (o: Options, p: Partial<Options>): Options => ({ ...o, ...STYLE_BASE, ...p })
 
 const STORE_KEY = 'shotframe:opts:v1'
 
@@ -139,7 +203,8 @@ export default function App() {
 
   const portraitDemo = useMemo(() => makeDemo(true), [])
   const landscapeDemo = useMemo(() => makeDemo(false), [])
-  const demoPortrait = (opts.frame === 'phone' || opts.frame === 'tablet') && !opts.landscape
+  const rotatable = (f: FrameId) => f === 'phone' || f === 'android' || f === 'tablet'
+  const demoPortrait = rotatable(opts.frame) && !opts.landscape
   const srcs = useMemo(
     () => (shots.length ? shots : [demoPortrait ? portraitDemo : landscapeDemo]),
     [shots, demoPortrait, portraitDemo, landscapeDemo],
@@ -174,6 +239,22 @@ export default function App() {
     return Math.min(Number(scaleChoice), maxScale(srcs, opts))
   }, [scaleChoice, srcs, opts])
 
+  const [thumbs, setThumbs] = useState<string[]>([])
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const c = document.createElement('canvas')
+      setThumbs(
+        PRESETS.map((p) => {
+          const o = applyPreset(opts, p.opts)
+          const { cw } = layout(srcs, o)
+          render(c, srcs, o, 180 / cw)
+          return c.toDataURL('image/jpeg', 0.82)
+        }),
+      )
+    }, 250)
+    return () => clearTimeout(t)
+  }, [srcs, opts])
+
   const { cw, ch } = useMemo(() => layout(srcs, opts), [srcs, opts])
   const outW = Math.round(cw * exportScale)
   const outH = Math.round(ch * exportScale)
@@ -203,7 +284,7 @@ export default function App() {
       setShots(next.slice(0, MAX_SHOTS))
       if (!append) {
         const first = loaded[0]
-        setOpts((o) => (o.frame === 'phone' || o.frame === 'tablet' ? { ...o, landscape: first.w > first.h } : o))
+        setOpts((o) => (rotatable(o.frame) ? { ...o, landscape: first.w > first.h } : o))
       }
     },
     [shots],
@@ -266,7 +347,7 @@ export default function App() {
     }
   }
 
-  const isWindow = opts.frame === 'browser' || opts.frame === 'mac'
+  const isWindow = WINDOW_FRAMES.includes(opts.frame)
   const isDevice = DEVICE_FRAMES.includes(opts.frame)
 
   return (
@@ -363,7 +444,23 @@ export default function App() {
                 </button>
               )}
             </div>
-            <p className="meta">多张截图会并排拼成一张图；拖入或粘贴会替换当前截图</p>
+            <p className="meta">多张截图会拼成一张图；拖入或粘贴会替换当前截图</p>
+            {shots.length > 1 && (
+              <Row label="排列">
+                <Segment value={opts.arrange} items={ARRANGES} onChange={(v) => set('arrange', v)} />
+              </Row>
+            )}
+          </Group>
+
+          <Group title="一键风格">
+            <div className="presets">
+              {PRESETS.map((p, i) => (
+                <button key={p.name} className="preset" onClick={() => setOpts((o) => applyPreset(o, p.opts))}>
+                  {thumbs[i] ? <img src={thumbs[i]} alt="" /> : <span className="ph" />}
+                  <span>{p.name}</span>
+                </button>
+              ))}
+            </div>
           </Group>
 
           <Group title="边框">
@@ -419,7 +516,7 @@ export default function App() {
                     ))}
                   </div>
                 </Row>
-                {(opts.frame === 'phone' || opts.frame === 'tablet') && (
+                {rotatable(opts.frame) && (
                   <Row label="方向">
                     <Segment
                       value={opts.landscape ? 'l' : 'p'}
@@ -431,8 +528,8 @@ export default function App() {
                     />
                   </Row>
                 )}
-                {opts.frame === 'phone' && (
-                  <Row label="灵动岛">
+                {(opts.frame === 'phone' || opts.frame === 'android') && (
+                  <Row label={opts.frame === 'phone' ? '灵动岛' : '摄像头'}>
                     <Segment
                       value={opts.island ? 'y' : 'n'}
                       items={[
@@ -479,10 +576,16 @@ export default function App() {
           </Group>
 
           <Group title="标题文字">
+            <input
+              className="text"
+              placeholder="角标（可选，如 NEW、v2.0 上线）"
+              value={opts.capBadge}
+              onChange={(e) => set('capBadge', e.target.value)}
+            />
             <textarea
               className="text area"
               rows={2}
-              placeholder="主标题，回车换行（留空则不显示）"
+              placeholder="主标题，回车换行；用 **两个星号** 包住的字会高亮"
               value={opts.capTitle}
               onChange={(e) => set('capTitle', e.target.value)}
             />
@@ -492,8 +595,24 @@ export default function App() {
               value={opts.capSub}
               onChange={(e) => set('capSub', e.target.value)}
             />
-            {(opts.capTitle.trim() || opts.capSub.trim()) && (
+            {(opts.capTitle.trim() || opts.capSub.trim() || opts.capBadge.trim()) && (
               <>
+                <Row label="字体">
+                  <Segment value={opts.capFont} items={CAP_FONTS} onChange={(v) => set('capFont', v)} />
+                </Row>
+                <Row label="高亮">
+                  <div className="custom">
+                    <Segment
+                      value={opts.capHl}
+                      items={[
+                        ['block', '色块'],
+                        ['color', '变色'],
+                      ]}
+                      onChange={(v) => set('capHl', v)}
+                    />
+                    <input type="color" value={opts.capAccent} onChange={(e) => set('capAccent', e.target.value)} />
+                  </div>
+                </Row>
                 <Row label="位置">
                   <Segment
                     value={opts.capPos}
@@ -550,6 +669,17 @@ export default function App() {
                   />
                 )
               })}
+              {MESHES.map((m, i) => (
+                <button
+                  key={m.name}
+                  title={`弥散 · ${m.name}`}
+                  className={`swatch${opts.bgKind === 'mesh' && opts.mesh === i ? ' on' : ''}`}
+                  style={{
+                    background: `radial-gradient(circle at ${i % 2 ? 88 : 12}% 18%, ${m.colors[1]}, transparent 70%), radial-gradient(circle at ${i % 2 ? 10 : 90}% 30%, ${m.colors[2]}, transparent 70%), radial-gradient(circle at 42% 100%, ${m.colors[3]}, transparent 70%), ${m.colors[0]}`,
+                  }}
+                  onClick={() => setOpts((o) => ({ ...o, bgKind: 'mesh', mesh: i }))}
+                />
+              ))}
               {SOLIDS.map((c) => (
                 <button
                   key={c}
@@ -594,6 +724,23 @@ export default function App() {
               <Row label={`角度 ${opts.angle}°`}>
                 <input type="range" min={0} max={360} step={5} value={opts.angle} onChange={(e) => set('angle', +e.target.value)} />
               </Row>
+            )}
+            {opts.bgKind !== 'transparent' && (
+              <>
+                <Row label="纹理">
+                  <Segment value={opts.pattern} items={PATTERNS} onChange={(v) => set('pattern', v)} />
+                </Row>
+                <Row label="颗粒感">
+                  <Segment
+                    value={opts.grain ? 'y' : 'n'}
+                    items={[
+                      ['n', '关'],
+                      ['y', '开'],
+                    ]}
+                    onChange={(v) => set('grain', v === 'y')}
+                  />
+                </Row>
+              </>
             )}
           </Group>
 
